@@ -32,11 +32,12 @@ export function TopBar({
   const paused = settings.pauseSync || !online;
   let pill = t(lang, "synced");
   let tone = "ok";
+  const waiting = pending > 0 ? fill(t(lang, "waiting"), { count: pending }) : "";
   if (!online) {
-    pill = t(lang, "noNetwork");
+    pill = waiting ? `${t(lang, "noNetwork")} · ${waiting}` : t(lang, "noNetwork");
     tone = "offline";
   } else if (settings.pauseSync) {
-    pill = t(lang, "paused");
+    pill = waiting ? `${t(lang, "paused")} · ${waiting}` : t(lang, "paused");
     tone = "offline";
   } else if (syncing) {
     pill = t(lang, "syncing");

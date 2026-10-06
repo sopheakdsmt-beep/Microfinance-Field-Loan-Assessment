@@ -52,9 +52,10 @@ export function App() {
     document.documentElement.lang = settings?.lang === "en" ? "en" : "km";
   }, [settings?.lang]);
 
-  const pause = settings?.pauseSync ?? false;
+  const pauseSync = settings?.pauseSync;
   useEffect(() => {
-    const tick = () => void flushSync(navigator.onLine && !pause);
+    if (pauseSync === undefined) return;
+    const tick = () => void flushSync(navigator.onLine && !pauseSync);
     tick();
     const id = window.setInterval(tick, 8000);
     window.addEventListener("online", tick);
@@ -62,7 +63,7 @@ export function App() {
       window.clearInterval(id);
       window.removeEventListener("online", tick);
     };
-  }, [pause]);
+  }, [pauseSync]);
 
   const persistBorrower = useCallback((value: Borrower) => {
     void saveBorrower(value).then(() => requestSync());
@@ -112,13 +113,13 @@ export function App() {
           }}
           onCreate={() => setCreating(blankBorrower())}
         />
-        {borrower && loan ? (
+        {borrower && loan && loan.borrowerId === borrower.id ? (
           <Workspace
             key={borrower.id}
             lang={lang}
             borrower={borrower}
             loan={loan}
-            photos={photos ?? []}
+            photos={(photos ?? []).filter((photo) => photo.borrowerId === borrower.id)}
             officer={officer || t(lang, "officer")}
             onSaveBorrower={persistBorrower}
             onSaveLoan={persistLoan}
@@ -129,13 +130,17 @@ export function App() {
               setSelectedId(null);
             }}
           />
-        ) : (
+        ) : borrowers.length === 0 ? (
           <section className="empty-sheet">
             <h2>{t(lang, "emptyTitle")}</h2>
             <p>{t(lang, "emptyBody")}</p>
             <button type="button" className="primary" onClick={() => setCreating(blankBorrower())}>
               {t(lang, "newBorrower")}
             </button>
+          </section>
+        ) : (
+          <section className="empty-sheet">
+            <p>{t(lang, "loading")}</p>
           </section>
         )}
       </div>

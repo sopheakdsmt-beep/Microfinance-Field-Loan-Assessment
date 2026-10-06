@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { buildSchedule, formatPercent } from "../domain/amortization";
 import { summarizeCashFlow } from "../domain/cashflow";
 import { LOAN_PURPOSES, purposeLabel } from "../domain/cambodia";
@@ -42,6 +42,14 @@ export function Workspace({
   const [terms, setTerms] = useState(loan);
   const [viewCurrency, setViewCurrency] = useState<Currency>(loan.currency);
   const [editing, setEditing] = useState(false);
+  const personRef = useRef(person);
+  const borrowerRef = useRef(borrower);
+  const termsRef = useRef(terms);
+  const loanRef = useRef(loan);
+  personRef.current = person;
+  borrowerRef.current = borrower;
+  termsRef.current = terms;
+  loanRef.current = loan;
 
   useEffect(() => {
     if (sameRecord(person, borrower)) return;
@@ -54,6 +62,13 @@ export function Workspace({
     const timer = window.setTimeout(() => onSaveLoan(terms), 400);
     return () => window.clearTimeout(timer);
   }, [terms, loan, onSaveLoan]);
+
+  useEffect(() => {
+    return () => {
+      if (!sameRecord(personRef.current, borrowerRef.current)) onSaveBorrower(personRef.current);
+      if (!sameRecord(termsRef.current, loanRef.current)) onSaveLoan(termsRef.current);
+    };
+  }, [onSaveBorrower, onSaveLoan]);
 
   const schedule = useMemo(
     () =>
